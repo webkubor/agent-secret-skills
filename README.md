@@ -10,22 +10,16 @@ git clone https://github.com/webkubor/agent-secret-skills.git
 cd agent-secret-skills
 pip install cryptography -q
 
-# ── ② 拿到 CF API Token（以下三选一）──
-#
-# 方式 A：你的 agent 注册时已经配好了，直接用
-export CF_API_TOKEN="cfat_xxx"
-#
-# 方式 B：问管理员要（南烛/小楠）
-#
-# 方式 C：你已有 Cloudflare 账号权限，自己生成
-# https://dash.cloudflare.com/profile/api-tokens
-
-# Account ID 是固定的（团队共用）
-export CF_ACCOUNT_ID="916ebb1b9f240bf4c8826021dd161692"
+# ── ② 拿到 AGENT_TOKEN（找管理员要，或从 ~/.hermes/agent-token 复制）──
+export AGENT_TOKEN="af_xxx..."
 
 # ── ③ 查密钥 ──
 python3 d1-secret-vault/scripts/secretvault.py list                    # 看有哪些
-python3 d1-secret-vault/scripts/secretvault.py get secret://gitlab/personal-pat  # 解密读取
+python3 d1-secret-vault/scripts/secretvault.py get secret://cloudflare/api-token  # 解密读取
+
+# ── ④ 存密钥（可选）──
+python3 d1-secret-vault/scripts/secretvault.py put secret://platform/name "值" --kind "API Key"
+python3 d1-secret-vault/scripts/secretvault.py del secret://platform/name
 ```
 
 ## 可用密钥
@@ -48,11 +42,13 @@ python3 d1-secret-vault/scripts/secretvault.py get secret://gitlab/personal-pat 
 ## 架构
 
 ```
-git clone（公开） → CF_API_TOKEN（管理员给） → D1 解密 → 拿到密钥
-
+AGENT_TOKEN (af_xxx)
+    ↓ Bearer Auth
+api.webkubor.online/content/secrets/
+    ↓
 D1 cortexos-brain-db
-  ├── secret_vault 表 → AES-256-GCM 密文
-  └── site_config 表 → master key（解密钥匙）
+    ├── secret_vault 表 → AES-256-GCM 密文
+    └── site_config 表 → master key
 ```
 
-不需要 CortexOS，不需要 cs CLI，不需要私有仓库权限。
+不需要 CortexOS，不需要 cs CLI，不需要私有仓库权限，不需要 CF API token。

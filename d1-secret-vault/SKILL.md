@@ -1,7 +1,7 @@
 ---
 name: d1-secret-vault
-description: "D1 加密密钥库 — 从 Cloudflare D1 解密读取密钥，不依赖任何私有仓库"
-version: 1.0.0
+description: "D1 加密密钥库 — 从 Cloudflare D1 解密读取密钥，仅需 AGENT_TOKEN"
+version: 2.0.0
 ---
 
 # D1 Secret Vault
@@ -10,17 +10,25 @@ version: 1.0.0
 
 ## 前置条件
 
-- 环境变量 `CF_API_TOKEN` 和 `CF_ACCOUNT_ID`
+- 环境变量 `AGENT_TOKEN`（af_ 开头的 agent token）
 - Python 3 + `cryptography`（`pip install cryptography`）
 
 ## 用法
 
 ```bash
+SCRIPT=d1-secret-vault/scripts/secretvault.py
+
 # 列出所有密钥元信息（不出明文）
-python3 scripts/secretvault.py list
+python3 $SCRIPT list
 
 # 解密读取密钥明文
-python3 scripts/secretvault.py get secret://platform/name
+python3 $SCRIPT get secret://platform/name
+
+# 存储/更新密钥（自动加密）
+python3 $SCRIPT put secret://platform/name "值" --kind "API Key" --account "账号描述"
+
+# 删除密钥
+python3 $SCRIPT del secret://platform/name
 ```
 
 ## 常用密钥
@@ -39,7 +47,9 @@ python3 scripts/secretvault.py get secret://platform/name
 
 ## 技术细节
 
-- 加密：AES-256-GCM
-- Master key：D1 `site_config` 表，key = `secret_vault_master_key`
+- 加密：AES-256-GCM（客户端加解密，API 只存密文）
+- Master key：API 自动获取
 - 密文表：D1 `secret_vault`
 - D1 数据库：`cortexos-brain-db`（a43038ff-8fe7-4aaa-b661-23238458456a）
+- API 端点：`https://api.webkubor.online/content/secrets`
+- 认证：Bearer token（AGENT_TOKEN）
