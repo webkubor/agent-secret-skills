@@ -1,161 +1,85 @@
-# 🔐 Agent Secret Vault
+# 🔐 Agent Secret Skills — AI Agent 密钥管理
 
-> **Zero-config encrypted secret management for AI agents.**
-> 一行命令解密密钥，任何 AI Agent 都能用的加密密钥库。
+> **告别 .env 泄露，让任何 AI Agent 安全读取加密密钥。** AES-256-GCM 云端加密，一行命令解密。
 
+[![Stars](https://img.shields.io/github/stars/webkubor/agent-secret-skills?style=social)](https://github.com/webkubor/agent-secret-skills)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Agent-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/Works%20With-Any%20AI%20Agent-blue)]()
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 
 ---
 
-## ✨ Why Agent Secret Vault?
+## 🔥 3 句话说明白
 
-AI agents need API keys. Hardcoding them is dangerous. `.env` files get scattered across machines. 1Password isn't agent-friendly.
-
-**Agent Secret Vault** solves this with:
-
-- 🔒 **AES-256-GCM encryption** — keys encrypted at rest in Cloudflare D1
-- 🤖 **Agent-native** — authenticate with a bearer token, no browser, no OAuth dance
-- 🌐 **HTTP API** — works from any language (Python / Node.js / Go / curl)
-- 📦 **Zero dependencies beyond Python stdlib** — just `pip install cryptography`
-- 🚀 **3 commands to start** — `clone → pip install → get`
+1. **API Key 硬编码在代码里 = 定时炸弹**
+2. **Agent Secret Skills 把密钥加密存云端，Agent 一行命令解密读取**
+3. **支持 20+ 种密钥类型，任何 Agent 框架都能用**
 
 ---
 
-## ⚡ Quick Start
+## ⚡ 30 秒接入
 
 ```bash
-# 1. Clone
-git clone https://github.com/webkubor/agent-secret-skills.git
-cd agent-secret-skills
+# 1. 安装 CortexOS CLI
+brew install webkubor/cortexos/cs
 
-# 2. Install (only cryptography needed)
-pip install cryptography
+# 2. 设置 Agent Token
+export AGENT_TOKEN="***"
 
-# 3. Set your agent token
-export AGENT_TOKEN="af_xxx..."
-
-# 4. Read a secret
-python3 d1-secret-vault/scripts/secretvault.py get secret://cloudflare/api-token
+# 3. 读取密钥
+cs secrets get secret://github/personal-pat
 ```
 
 ---
 
-## 📋 Commands
-
-| Command | Description |
-|---------|-------------|
-| `list` | List all available secret references (no values) |
-| `get <ref>` | Decrypt and return a secret value |
-| `put <ref> <value> --kind "API Key"` | Store a new encrypted secret |
-| `del <ref>` | Delete a secret |
-
----
-
-## 🏗️ Architecture
+## 🛡️ 安全架构
 
 ```
-Agent (Bearer Token)
-    ↓ HTTPS
-api.webkubor.online/content/secrets/
-    ↓ D1 Query
-Cloudflare D1 (cortexos-brain-db)
-    ├── secret_vault   → AES-256-GCM ciphertext
-    └── site_config    → master encryption key
-```
-
-**Encryption flow**: Agent sends request → API decrypts with master key → returns plaintext → Agent uses key → key never touches agent's disk
-
----
-
-## 🔑 Authentication
-
-Each agent gets a unique bearer token (`af_` prefix). All operations are authenticated and rate-limited.
-
-To get a token:
-- **Team agents**: Contact your team admin
-- **External contributors**: Open an issue to request access
-- **Self-hosted**: Deploy your own instance (see [Self-Hosting](#self-hosting))
-
----
-
-## 🛡️ Security
-
-- **Encryption**: AES-256-GCM with random IV per secret
-- **Transport**: HTTPS only (TLS 1.3)
-- **Key separation**: Master key stored separately from ciphertext
-- **No key logging**: Values never appear in server logs
-- **Audit trail**: All access logged with agent ID + timestamp
-
----
-
-## 📦 Use Cases
-
-```python
-# Python agent
-import os, json, urllib.request
-
-def get_secret(ref):
-    req = urllib.request.Request(
-        f"https://api.webkubor.online/content/secrets/{ref.replace('secret://','')}?key=***",
-        headers={"Authorization": f"Bearer {os.environ['AGENT_TOKEN']}"}
-    )
-    return json.loads(urllib.request.urlopen(req).read())["value"]
-
-deepseek_key = get_secret("secret://deepseek/api-key")
-```
-
-```javascript
-// Node.js agent
-async function getSecret(ref) {
-  const res = await fetch(
-    `https://api.webkubor.online/content/secrets/${ref.replace('secret://','')}?key=***`,
-    { headers: { Authorization: `Bearer ${process.env.AGENT_TOKEN}` } }
-  );
-  return (await res.json()).value;
-}
-
-const ghToken = await getSecret('secret://github/personal-pat');
-```
-
-```bash
-# Shell / curl
-curl -s "https://api.webkubor.online/content/secrets/deepseek/api-key?key=***" \
-  -H "Authorization: Bearer $AGENT_TOKEN" | jq -r '.value'
+Agent (你的电脑)              Cloudflare D1 (云端)
+     │                              │
+     ├── cs secrets get ──────────► │
+     │   (Bearer Token 鉴权)        │ ← 只存 AES-256-GCM 密文
+     │                              │ ← master key 分离存储
+     │ ◄──────── 解密后的明文 ────── │ ← 传输全程 TLS 1.3
+     │                              │
+     ▼                              
+   安全使用密钥                      
+   用完即弃，不落盘                   
 ```
 
 ---
 
-## 🚀 Self-Hosting
+## 🎯 适用场景
 
-```bash
-# Deploy to Cloudflare Workers + D1
-npx wrangler d1 create agent-secrets-db
-npx wrangler secret put MASTER_KEY
-npx wrangler deploy
-```
-
-Full self-hosting guide: [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md)
+| 谁 | 痛点 | 本 Skill 解决 |
+|----|------|-------------|
+| 🧑‍💻 Agent 开发者 | 密钥散落各处，.env 不安全 | 统一加密管理，一行命令读 |
+| 🏢 团队 | 共享密钥靠复制粘贴 | Agent Token 权限管理，即时生效 |
+| 🔒 安全敏感项目 | 密钥泄露 = 灾难 | AES-256-GCM，只存密文 |
 
 ---
 
-## 🤝 Contributing
+## 📦 支持的密钥类型
 
-PRs welcome! Areas to contribute:
-- Language SDKs (Go, Rust, TypeScript)
-- CLI improvements
-- Self-hosting docs
-- Security audits
+GitHub PAT · GitLab Token · Cloudflare API · DeepSeek · 智谱 · 火山引擎 · 飞书 · Jenkins · SSH Key · 自定义
 
 ---
 
-## 👥 Team
+## 🧩 兼容
 
-Created by [webkubor](https://github.com/webkubor) as part of the CortexOS agent fleet infrastructure.
+OpenClaw · Claude Code · Cursor · Codex · OpenCode · 任何能调 HTTP 的 Agent
 
 ---
 
-## ⭐ Star History
+## ⚠️ 与 .env 的区别
 
-If this project helps your agent manage secrets securely, give it a ⭐!
+| | .env | Agent Secret Skills |
+|--|------|---------------------|
+| 加密 | ❌ 明文 | ✅ AES-256-GCM |
+| 多 Agent 共享 | ❌ 需要手动复制 | ✅ 统一 Token 鉴权 |
+| 泄露风险 | 🔴 一次 git push 就完 | 🟢 密文 + Token 分离 |
+| 方便程度 | 读文件 | 一行 `cs secrets get` |
+
+---
+
+Built with 🔐 by [webkubor](https://github.com/webkubor) · Powered by [CortexOS](https://github.com/webkubor/CortexOS)
