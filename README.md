@@ -217,14 +217,14 @@ ky import --file .env --prefix GITHUB_
 | 平台 | Logo | 验证 | 别名注入 |
 |------|------|------|----------|
 | OpenAI | 🟢 | `ky check openai --key sk-xxx` | ✅ |
-| DeepSeek | 🔵 | `ky check deepseek --key sk-xxx` | ✅ |
-| 智谱 AI | 🟣 | `ky check zhipu --key xxx` | ✅ |
-| Moonshot (Kimi) | 🌙 | `ky check moonshot --key sk-xxx` | ✅ |
+| DeepSeek | 🔵 | `ky check deepseek --key sk-xxx`（含余额） | ✅ |
+| 智谱 AI | 🟣 | `ky check zhipu --key xxx`（含余额） | ✅ |
+| Moonshot (Kimi) | 🌙 | `ky check moonshot --key sk-xxx`（含余额） | ✅ |
 | Anthropic (Claude) | 🟠 | `ky check anthropic --key sk-ant-xxx` | ✅ |
 | Google Gemini | 💎 | `ky check gemini --key xxx` | ✅ |
 | 通义千问 | ☁️ | `ky check qwen --key sk-xxx` | ✅ |
 | MiniMax | 🔷 | `ky check minimax --key xxx` | ✅ |
-| 字节豆包 | 🫘 | `ky check doubao --key xxx` | ✅ |
+| 字节豆包 | 🫘 | `ky check doubao --key xxx`（含余额） | ✅ |
 | Groq | ⚡ | `ky check groq --key gsk_xxx` | ✅ |
 | Together AI | 🤝 | `ky check together --key xxx` | ✅ |
 | OpenRouter | 🔀 | `ky check openrouter --key sk-or-xxx` | ✅ |
@@ -232,7 +232,7 @@ ky import --file .env --prefix GITHUB_
 | SiliconFlow | 🧊 | `ky check siliconflow --key sk-xxx` | ✅
 | 百川 | 🌊 | `ky check baichuan --key xxx` | ✅ |
 | 讯飞星火 | ✨ | `ky check spark --key xxx` | ✅ |
-| 阿里云百炼 | ☁️ | `ky check aliyun --key xxx` | ✅ |
+| 阿里云百炼 | ☁️ | `ky check aliyun --key xxx`（含余额） | ✅ |
 
 ### 开发平台
 

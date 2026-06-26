@@ -159,15 +159,15 @@ ky providers
 | 平台 | Logo | 命令 |
 |------|------|------|
 | OpenAI | 🟢 | `ky check openai` |
-| DeepSeek | 🔵 | `ky check deepseek` |
-| 智谱 AI | 🟣 | `ky check zhipu` |
-| Moonshot | 🌙 | `ky check moonshot` |
+| DeepSeek | 🔵 | `ky check deepseek`（含余额） |
+| 智谱 AI | 🟣 | `ky check zhipu`（含余额） |
+| Moonshot | 🌙 | `ky check moonshot`（含余额） |
 | Anthropic | 🟠 | `ky check anthropic` |
 | Gemini | 💎 | `ky check gemini` |
 | 通义千问 | ☁️ | `ky check qwen` |
-| 阿里云百炼 | ☁️ | `ky check aliyun` |
+| 阿里云百炼 | ☁️ | `ky check aliyun`（含余额） |
 | MiniMax | 🔷 | `ky check minimax` |
-| 字节豆包 | 🫘 | `ky check doubao` |
+| 字节豆包 | 🫘 | `ky check doubao`（含余额） |
 | Groq | ⚡ | `ky check groq` |
 | OpenRouter | 🔀 | `ky check openrouter` |
 | GitHub | 🐙 | `ky check github` |

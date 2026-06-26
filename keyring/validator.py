@@ -172,11 +172,56 @@ def list_providers() -> list[dict]:
     return [{"id": k, **v} for k, v in PROVIDERS.items()]
 
 
+def _check_balance(provider_name: str, api_key: str) -> Optional[str]:
+    """查询余额（仅支持的平台）。"""
+    balance_apis = {
+        "deepseek": {
+            "url": "https://api.deepseek.com/user/balance",
+            "parse": lambda r: f"余额：¥{r.get('balance', 0):.4f}",
+        },
+        "moonshot": {
+            "url": "https://api.moonshot.cn/v1/users/me/balance",
+            "parse": lambda r: f"余额：¥{r.get('data', {}).get('available_balance', 0):.4f}",
+        },
+        "zhipu": {
+            "url": "https://open.bigmodel.cn/api/paas/v4/user/balance",
+            "parse": lambda r: f"余额：¥{r.get('balance', 0) / 100:.4f}",
+        },
+        "qwen": {
+            "url": "https://dashscope.aliyuncs.com/api/v1/services/billing/usage",
+            "parse": lambda r: f"余额：{r.get('balance', 'N/A')}",
+        },
+        "aliyun": {
+            "url": "https://dashscope.aliyuncs.com/api/v1/services/billing/usage",
+            "parse": lambda r: f"余额：{r.get('balance', 'N/A')}",
+        },
+        "doubao": {
+            "url": "https://ark.cn-beijing.volces.com/api/v3/account/balance",
+            "parse": lambda r: f"余额：¥{r.get('data', {}).get('balance', 0) / 10000:.4f}",
+        },
+    }
+
+    config = balance_apis.get(provider_name)
+    if not config:
+        return None
+
+    try:
+        req = urllib.request.Request(
+            config["url"],
+            headers={"Authorization": f"Bearer {api_key}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+            return config["parse"](result)
+    except Exception:
+        return None
+
+
 def validate_key(provider_name: str, api_key: str) -> dict:
     """验证 API Key 是否有效。
 
     Returns:
-        {"valid": bool, "message": str, "provider": str, "models": list}
+        {"valid": bool, "message": str, "provider": str, "models": list, "balance": str|None}
     """
     provider = get_provider(provider_name)
     if not provider:
@@ -185,6 +230,7 @@ def validate_key(provider_name: str, api_key: str) -> dict:
             "message": f"不支持的平台：{provider_name}",
             "provider": provider_name,
             "models": [],
+            "balance": None,
         }
 
     try:
@@ -216,11 +262,15 @@ def validate_key(provider_name: str, api_key: str) -> dict:
             if "data" in result:
                 models = [m.get("id", "") for m in result["data"][:5]]
 
+            # 查询余额
+            balance = _check_balance(provider_name, api_key)
+
             return {
                 "valid": True,
                 "message": f"{provider['logo']} {provider['name']} 验证通过",
                 "provider": provider_name,
                 "models": models,
+                "balance": balance,
             }
 
     except urllib.error.HTTPError as e:
@@ -237,6 +287,7 @@ def validate_key(provider_name: str, api_key: str) -> dict:
             "message": f"{provider['logo']} {provider['name']} {msg}",
             "provider": provider_name,
             "models": [],
+            "balance": None,
         }
     except urllib.error.URLError as e:
         return {
@@ -244,6 +295,7 @@ def validate_key(provider_name: str, api_key: str) -> dict:
             "message": f"网络错误：{e.reason}",
             "provider": provider_name,
             "models": [],
+            "balance": None,
         }
     except Exception as e:
         return {
@@ -251,4 +303,5 @@ def validate_key(provider_name: str, api_key: str) -> dict:
             "message": f"验证失败：{str(e)}",
             "provider": provider_name,
             "models": [],
+            "balance": None,
         }
